@@ -1,0 +1,14 @@
+# Dependencies
+node_modules/
+
+# Production build output
+dist/
+.gh-pages/
+.api/
+
+# Temp files
+temp/
+/public/catalog.json
+
+# Logs
+*.log
