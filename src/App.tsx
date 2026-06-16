@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { ChannelCard } from './components/ChannelCard';
 import { VideoPlayer } from './components/VideoPlayer';
-import { Search, SlidersHorizontal, Tv, X, Play } from 'lucide-react';
+import { Search, SlidersHorizontal, Tv, X, Play, Menu } from 'lucide-react';
 
 interface Stream {
   url: string;
@@ -33,6 +33,7 @@ export const App: React.FC = () => {
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<{
     type: 'all' | 'favorites' | 'category' | 'country' | 'language';
     value?: string;
@@ -44,6 +45,23 @@ export const App: React.FC = () => {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [visibleCount, setVisibleCount] = useState(40);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Debounce search query to prevent filtering lag on large lists
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const handleSelectFilter = (filter: {
+    type: 'all' | 'favorites' | 'category' | 'country' | 'language';
+    value?: string;
+  }) => {
+    setActiveFilter(filter);
+    setIsSidebarOpen(false);
+  };
 
   // Load catalog and favorites on mount
   useEffect(() => {
@@ -106,9 +124,9 @@ export const App: React.FC = () => {
       list = list.filter(c => c.languages.includes(activeFilter.value!));
     }
 
-    // 2. Search query filter
-    if (searchQuery.trim() !== '') {
-      const q = searchQuery.toLowerCase().trim();
+    // 2. Search query filter (using debounced query)
+    if (debouncedQuery.trim() !== '') {
+      const q = debouncedQuery.toLowerCase().trim();
       list = list.filter(c => {
         const nameMatch = c.name.toLowerCase().includes(q);
         const catMatch = c.categories.some(cat => catalog.categories[cat]?.toLowerCase().includes(q));
@@ -168,7 +186,7 @@ export const App: React.FC = () => {
   // Reset pagination count whenever filter changes
   useEffect(() => {
     setVisibleCount(40);
-  }, [activeFilter, searchQuery, qualityFilter]);
+  }, [activeFilter, debouncedQuery, qualityFilter]);
 
   const selectChannel = (channel: Channel) => {
     setSelectedChannel(channel);
@@ -201,20 +219,31 @@ export const App: React.FC = () => {
         </div>
       )}
 
+      {/* Mobile Sidebar Backdrop */}
+      {isSidebarOpen && (
+        <div className="sidebar-backdrop" onClick={() => setIsSidebarOpen(false)} />
+      )}
+
       {/* Sidebar */}
       <Sidebar
         categories={catalog?.categories || {}}
         countries={catalog?.countries || {}}
         languages={catalog?.languages || {}}
         activeFilter={activeFilter}
-        onSelectFilter={setActiveFilter}
+        onSelectFilter={handleSelectFilter}
         counts={counts}
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
       />
 
       {/* Main Layout Area */}
       <main className="main-content">
         {/* Top Header */}
         <header className="top-header glass-panel">
+          <button className="mobile-menu-btn" onClick={() => setIsSidebarOpen(true)} title="Menú">
+            <Menu size={20} />
+          </button>
+
           <div className="search-box">
             <Search className="search-icon" size={18} />
             <input

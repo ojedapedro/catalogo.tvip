@@ -38,10 +38,16 @@ export const ChannelCard: React.FC<ChannelCardProps> = ({
 }) => {
   const [logoFailed, setLogoFailed] = useState(!channel.logo);
 
+  // Reset logoFailed state when channel changes to prevent logo reuse bug
+  React.useEffect(() => {
+    setLogoFailed(!channel.logo);
+  }, [channel.id, channel.logo]);
+
   // Determine highest stream quality
   const getHighestQuality = () => {
     if (!channel.streams || channel.streams.length === 0) return 'SD';
     const qualities = channel.streams.map(s => s.quality);
+    if (qualities.some(q => q.toLowerCase().includes('2160') || q.toLowerCase().includes('4k') || q.toLowerCase().includes('uhd'))) return '4K';
     if (qualities.some(q => q.toLowerCase().includes('1080') || q.toLowerCase().includes('fhd'))) return 'FHD';
     if (qualities.some(q => q.toLowerCase().includes('720') || q.toLowerCase().includes('hd'))) return 'HD';
     return 'SD';

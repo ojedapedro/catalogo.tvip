@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Tv, Heart, Folder, Globe, Languages, ChevronDown, ChevronRight, List } from 'lucide-react';
+import { Tv, Heart, Folder, Globe, Languages, ChevronDown, ChevronRight, List, X } from 'lucide-react';
 
 interface SidebarProps {
   categories: Record<string, string>;
@@ -17,6 +17,8 @@ interface SidebarProps {
     countries: Record<string, number>;
     languages: Record<string, number>;
   };
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -25,7 +27,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   languages,
   activeFilter,
   onSelectFilter,
-  counts
+  counts,
+  isOpen = false,
+  onClose
 }) => {
   const [collapsedSections, setCollapsedSections] = useState({
     categories: false,
@@ -54,7 +58,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   return (
-    <aside className="sidebar glass-panel">
+    <aside className={`sidebar glass-panel ${isOpen ? 'mobile-open' : ''}`}>
       {/* Brand Header */}
       <div className="logo-section">
         <Tv className="logo-icon" size={28} />
@@ -64,6 +68,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
             IPTV Player & Catalog
           </span>
         </div>
+        {onClose && (
+          <button className="sidebar-close-btn" onClick={onClose} title="Cerrar menú">
+            <X size={20} />
+          </button>
+        )}
       </div>
 
       {/* Navigation Menus */}
